@@ -1,6 +1,9 @@
 import os
 
 import torch
+from torch.utils.data import DataLoader
+from torchvision import transforms
+from torchvision.datasets import ImageFolder
 import tqdm
 
 def compute_mean_and_std():
@@ -16,18 +19,24 @@ def compute_mean_and_std():
         return d["mean"], d["std"]
     
     ## ASSUMING WE GET STD AND MEAN OF TRAIN DATASET
-    folder = get_data_location()
+    folder = '../../dataset'
+    # folder = 'dataset'
     folder += '/train'
-    # print(folder)
-    ds = datasets.ImageFolder(
+    print(os.getcwd())
+    ds = ImageFolder(
         folder, transform=transforms.Compose([transforms.ToTensor()])
     )
-    dl = torch.utils.data.DataLoader(
+    print(ds)
+    print(len)
+    dl = DataLoader(
         ds, batch_size=1, num_workers=0
     )
 
     mean = 0.0
-    for images, _ in tqdm(dl, total=len(ds), desc="Computing mean", ncols=80):
+    # for i in dl:
+    #     continue
+    # wtf error
+    for images in tqdm(dl, total=len(ds), desc="Computing mean", ncols=80):
         batch_samples = images.size(0)
         images = images.view(batch_samples, images.size(1), -1)
         mean += images.mean(2).sum(0)
@@ -47,3 +56,6 @@ def compute_mean_and_std():
     torch.save({"mean": mean, "std": std}, cache_file)
 
     return mean, std
+
+if __name__ == "__main__":
+    compute_mean_and_std()
