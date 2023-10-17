@@ -4,7 +4,7 @@ import torch
 from torch.utils.data import DataLoader
 from torchvision import transforms
 from torchvision.datasets import ImageFolder
-import tqdm
+from tqdm import tqdm
 
 def compute_mean_and_std():
     """
@@ -36,7 +36,7 @@ def compute_mean_and_std():
     # for i in dl:
     #     continue
     # wtf error
-    for images in tqdm(dl, total=len(ds), desc="Computing mean", ncols=80):
+    for images, _ in tqdm(dl, total=len(ds), desc="Computing mean", ncols=80):
         batch_samples = images.size(0)
         images = images.view(batch_samples, images.size(1), -1)
         mean += images.mean(2).sum(0)

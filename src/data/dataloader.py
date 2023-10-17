@@ -10,12 +10,10 @@ from helper import compute_mean_and_std
 class DataLoader():
     def __init__(
             self, 
-            file, 
             batch_size: int = 32,
             valid_size: float = 0.2,
             num_workers: int = 0
         ):
-        self.stdev_file = file
         self.batch_size = batch_size
         self.valid_size = valid_size
         self.num_workers = num_workers
@@ -44,9 +42,10 @@ class DataLoader():
     def get_train_val_dataloader(self):
         mean, std = compute_mean_and_std()
         train_data = ImageFolder(
-            '../../datasets/train',
+            '../../dataset/train',
             self._train_transform(mean, std)
         )
+        print(train_data)# new wtf error
         valid_data = ImageFolder(
             '../../dataset/train',
             self._valid_transform(mean, std)
@@ -65,7 +64,8 @@ class DataLoader():
 
         train_sampler = SubsetRandomSampler(train_idx)
         valid_sampler = SubsetRandomSampler(valid_idx)
-
+        print(train_data)
+        print(valid_data)
         return DataLoader(
             train_data,
             batch_size=self.batch_size,
