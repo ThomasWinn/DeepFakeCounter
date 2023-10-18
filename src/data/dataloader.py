@@ -1,3 +1,4 @@
+import os
 import math
 
 import torch
@@ -7,7 +8,7 @@ from torchvision.datasets import ImageFolder
 
 from helper import compute_mean_and_std
 
-class DataLoader():
+class Data_DataLoader():
     def __init__(
             self, 
             batch_size: int = 32,
@@ -18,19 +19,26 @@ class DataLoader():
         self.valid_size = valid_size
         self.num_workers = num_workers
 
+    # TODO: Define Transforms
     def _train_transform(self, mean, std):
         return transforms.Compose(
-            transforms.ToTensor()
+            [
+                transforms.ToTensor()
+            ]
         )
 
     def _valid_transform(self, mean, std):
         return transforms.Compose(
-            transforms.ToTensor()
+            [
+                transforms.ToTensor()
+            ]
         )
 
     def _test_transform(self, mean, std):
         return transforms.Compose(
-            transforms.ToTensor()
+            [
+                transforms.ToTensor()
+            ]
         )
 
     def _train_imagefolder(self, train_path):
@@ -41,14 +49,15 @@ class DataLoader():
 
     def get_train_val_dataloader(self):
         mean, std = compute_mean_and_std()
+        folder = '../../dataset/train'
+
         train_data = ImageFolder(
-            '../../dataset/train',
-            self._train_transform(mean, std)
+            folder,
+            transform=self._train_transform(mean, std)
         )
-        print(train_data)# new wtf error
         valid_data = ImageFolder(
-            '../../dataset/train',
-            self._valid_transform(mean, std)
+            folder,
+            transform=self._valid_transform(mean, std)
         )
 
         # Experiment with SubsetRandomSampler() and random_split
@@ -64,8 +73,6 @@ class DataLoader():
 
         train_sampler = SubsetRandomSampler(train_idx)
         valid_sampler = SubsetRandomSampler(valid_idx)
-        print(train_data)
-        print(valid_data)
         return DataLoader(
             train_data,
             batch_size=self.batch_size,
@@ -82,8 +89,8 @@ class DataLoader():
     def get_test_dataloader(self):
         mean, std = compute_mean_and_std()
         test_data = ImageFolder(
-            '../../dataset/train',
-            self._valid_transform(mean, std)
+            '../../dataset/test',
+            self._test_transform(mean, std)
         )
         return DataLoader(
             test_data,
@@ -94,6 +101,6 @@ class DataLoader():
         )
     
 if __name__ == "__main__":
-    d = DataLoader()
+    d = Data_DataLoader()
     train, val = d.get_train_val_dataloader()
     test = d.get_test_dataloader()

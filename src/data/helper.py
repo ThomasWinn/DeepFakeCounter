@@ -10,7 +10,6 @@ def compute_mean_and_std():
     """
     Compute per-channel mean and std of the dataset (to be used in transforms.Normalize())
     """
-
     cache_file = "mean_and_std.pt"
     if os.path.exists(cache_file):
         print(f"Reusing cached mean and std")
@@ -19,23 +18,15 @@ def compute_mean_and_std():
         return d["mean"], d["std"]
     
     ## ASSUMING WE GET STD AND MEAN OF TRAIN DATASET
-    folder = '../../dataset'
-    # folder = 'dataset'
-    folder += '/train'
-    print(os.getcwd())
+    folder = '../../dataset/train'
     ds = ImageFolder(
         folder, transform=transforms.Compose([transforms.ToTensor()])
     )
-    print(ds)
-    print(len)
     dl = DataLoader(
         ds, batch_size=1, num_workers=0
     )
 
     mean = 0.0
-    # for i in dl:
-    #     continue
-    # wtf error
     for images, _ in tqdm(dl, total=len(ds), desc="Computing mean", ncols=80):
         batch_samples = images.size(0)
         images = images.view(batch_samples, images.size(1), -1)
