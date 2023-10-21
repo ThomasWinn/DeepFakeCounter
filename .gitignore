@@ -6,6 +6,10 @@ __pycache__/
 # Dataset folder
 dataset/
 
+lightning_logs/
+
+test.py
+
 # C extensions
 *.so
 

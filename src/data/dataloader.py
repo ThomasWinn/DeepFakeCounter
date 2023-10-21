@@ -6,15 +6,17 @@ from torch.utils.data import DataLoader, SubsetRandomSampler
 from torchvision import transforms
 from torchvision.datasets import ImageFolder
 
-from helper import compute_mean_and_std
+from .helper import compute_mean_and_std
 
 class Data_DataLoader():
     def __init__(
             self, 
+            cache_file: str = 'mean_and_std.pt',
             batch_size: int = 32,
             valid_size: float = 0.2,
             num_workers: int = 0
         ):
+        self.cache_file = cache_file
         self.batch_size = batch_size
         self.valid_size = valid_size
         self.num_workers = num_workers
@@ -57,8 +59,8 @@ class Data_DataLoader():
         return ImageFolder(test_path)
 
     def get_train_val_dataloader(self):
-        mean, std = compute_mean_and_std()
-        folder = '../../dataset/train'
+        mean, std = compute_mean_and_std(self.cache_file)
+        folder = '../dataset/train' # ../../dataset/train when running in here
 
         train_data = ImageFolder(
             folder,
@@ -96,9 +98,9 @@ class Data_DataLoader():
         )
     
     def get_test_dataloader(self):
-        mean, std = compute_mean_and_std()
+        mean, std = compute_mean_and_std(self.cache_file)
         test_data = ImageFolder(
-            '../../dataset/test',
+            '../dataset/test', # ../../dataset/test wheh running in here
             self._test_transform(mean, std)
         )
         return DataLoader(

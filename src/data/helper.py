@@ -6,11 +6,11 @@ from torchvision import transforms
 from torchvision.datasets import ImageFolder
 from tqdm import tqdm
 
-def compute_mean_and_std():
+def compute_mean_and_std(file_path):
     """
     Compute per-channel mean and std of the dataset (to be used in transforms.Normalize())
     """
-    cache_file = "mean_and_std.pt"
+    cache_file = file_path
     if os.path.exists(cache_file):
         print(f"Reusing cached mean and std")
         d = torch.load(cache_file)
@@ -18,7 +18,7 @@ def compute_mean_and_std():
         return d["mean"], d["std"]
     
     ## ASSUMING WE GET STD AND MEAN OF TRAIN DATASET
-    folder = '../../dataset/train'
+    folder = '../dataset/train' # ../../dataset/train when running inside this folder
     ds = ImageFolder(
         folder, transform=transforms.Compose([transforms.ToTensor()])
     )
