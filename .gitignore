@@ -7,6 +7,7 @@ __pycache__/
 dataset/
 
 lightning_logs/
+tensorboard_logs/
 
 test.py
 
