@@ -2,18 +2,12 @@ import lightning.pytorch as pl
 from lightning.pytorch.loggers import TensorBoardLogger
 from torch.utils.tensorboard import SummaryWriter
 
+from data.dataloader import Data_DataLoader
 from data.cifake_data_module import CIFAKEDataModule
 from models.cnn import CIFAKE_CNN
 
 
 if __name__ == "__main__":
-    
-
-    batch_size = 32
-
-    # loader_obj = Data_DataLoader('data/mean_and_std.pt', batch_size=batch_size, valid_size=0.2, num_workers=0)
-    # train_loader, valid_loader = loader_obj.get_train_val_dataloader()
-    # test_loader = loader_obj.get_test_dataloader()
     dm = CIFAKEDataModule(
         cache_file='data/mean_and_std.pt',
         data_dir='../dataset',
