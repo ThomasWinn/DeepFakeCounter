@@ -5,24 +5,9 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import torchmetrics
-from torchmetrics import Metric
+import torchvision
 
-
-class MyAccuracy(Metric):
-    def __init__(self):
-        super().__init__()
-        self.add_state('total', default=torch.tensor(0), dist_reduce_fx='sum')
-        self.add_state('correct', default=torch.tensor(0), dist_reduce_fx='sum')
-
-    def update(self, preds, targets):
-        y_hat = (preds > 0.5).float()
-        assert y_hat.shape == targets.shape
-        
-        self.correct += torch.sum(y_hat == targets)
-        self.total += targets.numel()
-        
-    def compute(self):
-        return self.correct.float() / self.total.float()
+from .metrics import MyAccuracy
 
 class CIFAKE_CNN(pl.LightningModule):
     """This is the proposed architecture for lowest loss with 92.93% accuracy
@@ -32,7 +17,7 @@ class CIFAKE_CNN(pl.LightningModule):
     Args:
         nn (Module): Inherit the base Module class
     """
-    def __init__(self) -> None:
+    def __init__(self, lr, weight_decay) -> None:
         super().__init__()
         
         self.backbone = nn.Sequential(
@@ -57,8 +42,11 @@ class CIFAKE_CNN(pl.LightningModule):
         
         self.cross_entropy = nn.CrossEntropyLoss()
         self.my_accuracy = MyAccuracy()
-        self.accuracy = torchmetrics.Accuracy(task='binary', num_classes=2)
+        # self.accuracy = torchmetrics.Accuracy(task='binary', num_classes=2)
         self.f1_score = torchmetrics.F1Score(task='binary', num_classes=2)
+        
+        self.lr = lr
+        self.weight_decay = weight_decay
     
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         x = self.backbone(x)
@@ -67,15 +55,40 @@ class CIFAKE_CNN(pl.LightningModule):
         return x
     
     def training_step(self, batch, batch_idx):
+        x, y = batch
         loss, y_hat, y = self._common_step(batch, batch_idx)
-        accuracy = self.my_accuracy(y_hat, y)
-        f1_score = self.f1_score(y_hat, y)
+        # accuracy = self.my_accuracy(y_hat, y)
+        # f1_score = self.f1_score(y_hat, y)
         # slow; create an training_end function to calculate at end
-        self.log_dict({'train_loss': loss, 'train_accuracy': accuracy, 'train_f1_score': f1_score},
-                      on_step=False, on_epoch=True, prog_bar=True)
-        # self.log("train_loss", loss)
-        return loss
+        self.log_dict(
+            {
+                'train_loss': loss
+            },
+            on_step=False,
+            on_epoch=True,
+            prog_bar=True
+        )
+        
+        if batch_idx % 100 == 0:
+            x = x[:8]
+            grid = torchvision.utils.make_grid(x.view(-1, 1, 32, 32))
+            self.logger.experiment.add_image("CIFAKE_images", grid, self.global_step)
+            
+        return {"loss": loss, "y_hat": y_hat, "y": y}
     
+    def training_epoch_end(self, outputs: EPOCH_OUTPUT) -> None:
+        y_hats = torch.cat([x['y_hat'] for x in outputs])
+        ys = torch.cat([x['y'] for x in outputs])
+        self.log_dict(
+            {
+                'train_accuracy': self.my_accuracy(y_hats, ys),
+                'train_f1_score': self.f1_score(y_hats, ys)
+            },
+            on_step=False,
+            on_epoch=True,
+            prog_bar=True
+        )
+        
     def validation_step(self, batch, batch_idx):
         loss, y_hat, y = self._common_step(batch, batch_idx)
         self.log("valid_loss", loss)
@@ -111,12 +124,12 @@ class CIFAKE_CNN(pl.LightningModule):
         return loss, y_hat, y
     
     def configure_optimizers(self):
-        optimizer1 = torch.optim.Adam(self.parameters(), lr=1e-3, weight_decay=0)
-        return optimizer1
-        # scheduler1 = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer1,)
-        # return (
-        #     {
-        #         "optimizer": optimizer1,
-        #         "lr_scheduler": scheduler1
-        #     }
-        # )
+        optimizer1 = torch.optim.Adam(self.parameters(), lr=self.lr, weight_decay=self.weight_decay)
+        scheduler1 = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer1,)
+        return (
+            {
+                "optimizer": optimizer1,
+                "lr_scheduler": scheduler1,
+                "monitor": "valid_loss"
+            }
+        )
