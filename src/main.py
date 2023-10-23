@@ -37,7 +37,7 @@ if __name__ == "__main__":
         accelerator=config.ACCELERATOR,
         default_root_dir=config.LOG_DIR,
         devices=config.DEVICES, # how many gpus
-        callbacks=[EarlyStopping(monitor='valid_loss')],
+        # callbacks=[EarlyStopping(monitor='valid_loss')],
         enable_checkpointing=True,
         fast_dev_run=False, # A flag to touch everyline of model to uncover bugs easier. Use in develop. On default = False. Runs one train and valid batch and program ends
         gradient_clip_val=None, # default None, but clips to specific val if you see gradiants exploding
