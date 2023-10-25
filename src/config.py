@@ -14,4 +14,4 @@ ACCELERATOR = 'gpu' # device whether gpu, cpu, tpu, etc.
 LOG_DIR = '../' # location to place tensorboard_logs
 DEVICES = 1 # how many gpus
 MIN_EPOCHS = 1
-MAX_EPOCHS = 100
+MAX_EPOCHS = 50 # 100, 50 overfits plateaus crazy

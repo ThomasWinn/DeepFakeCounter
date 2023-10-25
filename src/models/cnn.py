@@ -138,7 +138,20 @@ class CIFAKE_CNN(pl.LightningModule):
     def test_step(self, batch, batch_idx):
         loss, y_hat, y = self._common_step(batch, batch_idx)
         self.log("test_loss", loss)
-        return loss
+        return {"loss": loss, "y_hat": y_hat, "y": y}
+    
+    def test_epoch_end(self, outputs: EPOCH_OUTPUT) -> None:
+        y_hats = torch.cat([x['y_hat'] for x in outputs])
+        ys = torch.cat([x['y'] for x in outputs])
+        self.log_dict(
+            {
+                'test_accuracy': self.my_accuracy(y_hats, ys),
+                'test_f1_score': self.f1_score(y_hats, ys)
+            },
+            on_step=False,
+            on_epoch=True,
+            prog_bar=True
+        )
     
     def predict_step(self, batch, batch_idx):
         # x, y = batch
