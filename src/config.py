@@ -6,7 +6,7 @@ NUM_WORKERS = 0
 VALID_SIZE = 0.2
 
 # Model
-LEARNING_RATE = 1e-3
+LEARNING_RATE = 1e-4
 WEIGHT_DECAY = 0
 
 # Trainer

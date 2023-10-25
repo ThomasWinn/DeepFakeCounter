@@ -1,4 +1,4 @@
-from typing import Any, List
+from typing import Any, List, Union
 import lightning.pytorch as pl
 from lightning.pytorch.utilities.types import EPOCH_OUTPUT, STEP_OUTPUT
 import torch
@@ -20,23 +20,49 @@ class CIFAKE_CNN(pl.LightningModule):
     def __init__(self, lr, weight_decay) -> None:
         super().__init__()
         
+        # self.backbone = nn.Sequential(
+        #     nn.Conv2d(3, 32, kernel_size=3, padding=1), # 32 x 32 x 32
+        #     nn.MaxPool2d(2, 2), # 32 x 16 x 16
+        #     nn.ReLU(),
+            
+        #     nn.Conv2d(32, 32, kernel_size=3, padding=1), # 32 x 16 x 16
+        #     nn.MaxPool2d(2, 2), # 32 x 8 x 8
+        #     nn.ReLU(),
+        # )
+        
+        # Mine
         self.backbone = nn.Sequential(
             nn.Conv2d(3, 32, kernel_size=3, padding=1), # 32 x 32 x 32
             nn.MaxPool2d(2, 2), # 32 x 16 x 16
             nn.ReLU(),
             
-            nn.Conv2d(32, 32, kernel_size=3, padding=1), # 32 x 16 x 16
-            nn.MaxPool2d(2, 2), # 32 x 8 x 8
+            nn.Conv2d(32, 64, kernel_size=3, padding=1), # 64 x 16 x 16
+            nn.MaxPool2d(2, 2), # 64 x 8 x 8
+            nn.ReLU(),
+            
+            nn.Conv2d(64, 128, kernel_size=3, padding=1), # 128 x 8 x 8
+            nn.MaxPool2d(2, 2), # 128 x 4 x 4
             nn.ReLU(),
         )
         
         self.flatten = nn.Flatten()
         
+        # self.head = nn.Sequential(
+        #     nn.Linear(32 * 8 * 8, 64), # 2048 x 64
+        #     nn.ReLU(),
+            
+        #     nn.Linear(64, 1), # 64 x 1
+        #     nn.Sigmoid()
+        # )
+        
         self.head = nn.Sequential(
-            nn.Linear(32 * 8 * 8, 64), # 2048 x 64
+            nn.Linear(128 * 4 * 4, 1024), # 2048 x 1024
             nn.ReLU(),
             
-            nn.Linear(64, 1), # 64 x 1
+            nn.Linear(1024, 256), # 1024 x 256
+            nn.ReLU(),
+            
+            nn.Linear(256, 1), # 256 x 1
             nn.Sigmoid()
         )
         
@@ -47,6 +73,9 @@ class CIFAKE_CNN(pl.LightningModule):
         
         self.lr = lr
         self.weight_decay = weight_decay
+        
+        self.train_loss = 0.0
+        self.valid_loss = 0.0
     
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         x = self.backbone(x)
@@ -74,6 +103,9 @@ class CIFAKE_CNN(pl.LightningModule):
             grid = torchvision.utils.make_grid(x.view(-1, 1, 32, 32))
             self.logger.experiment.add_image("CIFAKE_images", grid, self.global_step)
             
+        # self.logger.experiment.add_scalars('Train vs Valid', {'train_loss': loss}, self.global_step)
+        self.train_loss += (1 / (batch_idx + 1)) * (loss.data.item() - self.train_loss)
+            
         return {"loss": loss, "y_hat": y_hat, "y": y}
     
     def training_epoch_end(self, outputs: EPOCH_OUTPUT) -> None:
@@ -88,11 +120,20 @@ class CIFAKE_CNN(pl.LightningModule):
             on_epoch=True,
             prog_bar=True
         )
+        self.logger.experiment.add_scalars('Train vs Valid', {'train_loss': self.train_loss}, self.global_step)
+        self.train_loss = 0.0
         
     def validation_step(self, batch, batch_idx):
         loss, y_hat, y = self._common_step(batch, batch_idx)
         self.log("valid_loss", loss)
+        
+        self.valid_loss += (1 / (batch_idx + 1)) * (loss.data.item() - self.valid_loss)
+        # self.logger.experiment.add_scalars('Train vs Valid', {'valid_loss': self.valid_loss}, self.global_step)
         return loss
+    
+    def validation_epoch_end(self, outputs: EPOCH_OUTPUT) -> None:
+        self.logger.experiment.add_scalars('Train vs Valid', {'valid_loss': self.valid_loss}, self.global_step)
+        self.valid_loss = 0.0
     
     def test_step(self, batch, batch_idx):
         loss, y_hat, y = self._common_step(batch, batch_idx)
