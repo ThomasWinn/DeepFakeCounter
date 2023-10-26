@@ -14,7 +14,7 @@ from models.cnn import CIFAKE_CNN
 if __name__ == "__main__":
     logger = TensorBoardLogger(
         save_dir='../tensorboard_logs',
-        name='4_conv_batch_3_linear_epoch{}_lr{}'.format(config.MAX_EPOCHS),
+        name='4_conv_batch_3_linear',
         log_graph=True
     )
     
