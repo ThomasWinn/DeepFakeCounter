@@ -1,4 +1,5 @@
 # python=3.10
+black           # black . - will allow for file formmating
 tensorboard
 torch
 torchvision
