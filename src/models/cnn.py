@@ -20,7 +20,7 @@ class CIFAKE_CNN(pl.LightningModule):
     def __init__(self, epochs, batch_size, valid_size, num_inputs, num_outputs, lr, weight_decay) -> None:
         super().__init__()
         
-        # 1
+        # 1 2_conv_2_linear_paper
         # self.backbone = nn.Sequential(
         #     nn.Conv2d(3, 32, kernel_size=3, padding=1), # 32 x 32 x 32
         #     nn.MaxPool2d(2, 2), # 32 x 16 x 16
@@ -31,7 +31,7 @@ class CIFAKE_CNN(pl.LightningModule):
         #     nn.ReLU(),
         # )
         
-        # 2
+        # 2 3_conv_3_linear 
         # self.backbone = nn.Sequential(
         #     nn.Conv2d(3, 32, kernel_size=3, padding=1), # 32 x 32 x 32
         #     nn.MaxPool2d(2, 2), # 32 x 16 x 16
@@ -46,7 +46,7 @@ class CIFAKE_CNN(pl.LightningModule):
         #     nn.ReLU(),
         # )
         
-        # 3 4 layer conv
+        # # 3 4_conv_batch_3_linear
         self.backbone = nn.Sequential(
             nn.Conv2d(num_inputs, 32, kernel_size=3, padding=1), # 32 x 32 x 32
             nn.BatchNorm2d(32),
@@ -69,9 +69,37 @@ class CIFAKE_CNN(pl.LightningModule):
             nn.ReLU(),
         )
         
+        # # 4 5_conv_batch_3_linear
+        # self.backbone = nn.Sequential(
+        #     nn.Conv2d(num_inputs, 16, kernel_size=3, padding=1), # 32 x 32 x 32
+        #     nn.BatchNorm2d(16),
+        #     nn.MaxPool2d(2, 2), # 32 x 16 x 16
+        #     nn.ReLU(),
+            
+        #     nn.Conv2d(16, 32, kernel_size=3, padding=1), # 32 x 32 x 32
+        #     nn.BatchNorm2d(32),
+        #     nn.MaxPool2d(2, 2), # 32 x 16 x 16
+        #     nn.ReLU(),
+            
+        #     nn.Conv2d(32, 64, kernel_size=3, padding=1), # 64 x 16 x 16
+        #     nn.BatchNorm2d(64),
+        #     nn.MaxPool2d(2, 2), # 64 x 8 x 8
+        #     nn.ReLU(),
+            
+        #     nn.Conv2d(64, 128, kernel_size=3, padding=1), # 128 x 8 x 8
+        #     nn.BatchNorm2d(128),
+        #     nn.MaxPool2d(2, 2), # 128 x 4 x 4
+        #     nn.ReLU(),
+            
+        #     nn.Conv2d(128, 256, kernel_size=3, padding=1), # 256 x 4 x 4
+        #     nn.BatchNorm2d(256),
+        #     nn.MaxPool2d(2, 2), # 256 x 2 x 2
+        #     nn.ReLU(),
+        # )
+        
         self.flatten = nn.Flatten()
         
-        # 1
+        # 1 2_conv_2_linear_paper
         # self.head = nn.Sequential(
         #     nn.Linear(32 * 8 * 8, 64), # 2048 x 64
         #     nn.ReLU(),
@@ -80,7 +108,7 @@ class CIFAKE_CNN(pl.LightningModule):
         #     nn.Sigmoid()
         # )
         
-        # 2
+        # 2 3_conv_3_linear 
         # self.head = nn.Sequential(
         #     nn.Linear(128 * 4 * 4, 1024), # 2048 x 1024
         #     nn.ReLU(),
@@ -92,6 +120,8 @@ class CIFAKE_CNN(pl.LightningModule):
         #     nn.Sigmoid()
         # )
         
+        
+        # 3 4_conv_batch_3_linear
         self.head = nn.Sequential(
             nn.Linear(256 * 2 * 2, 512), # 2048 x 1024
             nn.ReLU(),
@@ -102,6 +132,18 @@ class CIFAKE_CNN(pl.LightningModule):
             nn.Linear(128, num_outputs), # 128 x 1
             nn.Sigmoid()
         )
+        
+        # 4 5_conv_batch_3_linear
+        # self.head = nn.Sequential(
+        #     nn.Linear(256 * 1 * 1, 128), # 2048 x 1024
+        #     nn.ReLU(),
+            
+        #     nn.Linear(128, 64), # 1024 x 128
+        #     nn.ReLU(),
+            
+        #     nn.Linear(64, num_outputs), # 128 x 1
+        #     nn.Sigmoid()
+        # )
         
         self.cross_entropy = nn.CrossEntropyLoss()
         self.my_accuracy = MyAccuracy()
