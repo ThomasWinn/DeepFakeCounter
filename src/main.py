@@ -20,8 +20,8 @@ if __name__ == "__main__":
     
     checkpoint_callback = ModelCheckpoint(
         monitor='valid_loss',
-        dirpath='../models/',
-        filename='{logger.name}-{epoch:02d}-{valid_loss:.2f}',
+        dirpath='../models/{}/'.format(logger.name),
+        filename='{epoch:02d}-{valid_loss:.2f}',
         save_top_k=3,
         mode='min'
     )
