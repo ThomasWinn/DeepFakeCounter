@@ -1,7 +1,8 @@
 import lightning.pytorch as pl
 from lightning.pytorch.loggers import TensorBoardLogger
-from lightning.pytorch.callbacks import EarlyStopping
+from lightning.pytorch.callbacks import EarlyStopping, ModelCheckpoint
 from lightning.pytorch.profilers import PyTorchProfiler
+import torch
 from torch.utils.tensorboard import SummaryWriter
 
 import config
@@ -13,11 +14,17 @@ from models.cnn import CIFAKE_CNN
 if __name__ == "__main__":
     logger = TensorBoardLogger(
         save_dir='../tensorboard_logs',
-        name='paper_cnn_v0',
+        name='4_conv_batch_3_linear_epoch{}_lr{}'.format(config.MAX_EPOCHS),
         log_graph=True
     )
     
-    # profiler = PyTorchProfiler()
+    checkpoint_callback = ModelCheckpoint(
+        monitor='valid_loss',
+        dirpath='../models/',
+        filename='{}-{epoch:02d}-{val_loss:.2f}'.format(logger.name),
+        save_top_k=3,
+        mode='min'
+    )
     
     dm = CIFAKEDataModule(
         cache_file=config.CACHE_FILE,
@@ -28,6 +35,11 @@ if __name__ == "__main__":
     )
 
     model = CIFAKE_CNN(
+        epochs=config.MAX_EPOCHS,
+        batch_size=config.BATCH_SIZE,
+        valid_size=config.VALID_SIZE,
+        num_inputs=config.NUM_INPUTS,
+        num_outputs=config.NUM_OUTPUTS,
         lr=config.LEARNING_RATE,
         weight_decay=config.WEIGHT_DECAY
     )
@@ -37,7 +49,7 @@ if __name__ == "__main__":
         accelerator=config.ACCELERATOR,
         default_root_dir=config.LOG_DIR,
         devices=config.DEVICES, # how many gpus
-        # callbacks=[EarlyStopping(monitor='valid_loss')],
+        callbacks=[checkpoint_callback],
         enable_checkpointing=True,
         fast_dev_run=False, # A flag to touch everyline of model to uncover bugs easier. Use in develop. On default = False. Runs one train and valid batch and program ends
         gradient_clip_val=None, # default None, but clips to specific val if you see gradiants exploding

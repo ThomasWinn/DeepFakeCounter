@@ -17,9 +17,10 @@ class CIFAKE_CNN(pl.LightningModule):
     Args:
         nn (Module): Inherit the base Module class
     """
-    def __init__(self, lr, weight_decay) -> None:
+    def __init__(self, epochs, batch_size, valid_size, num_inputs, num_outputs, lr, weight_decay) -> None:
         super().__init__()
         
+        # 1
         # self.backbone = nn.Sequential(
         #     nn.Conv2d(3, 32, kernel_size=3, padding=1), # 32 x 32 x 32
         #     nn.MaxPool2d(2, 2), # 32 x 16 x 16
@@ -30,23 +31,47 @@ class CIFAKE_CNN(pl.LightningModule):
         #     nn.ReLU(),
         # )
         
-        # Mine
+        # 2
+        # self.backbone = nn.Sequential(
+        #     nn.Conv2d(3, 32, kernel_size=3, padding=1), # 32 x 32 x 32
+        #     nn.MaxPool2d(2, 2), # 32 x 16 x 16
+        #     nn.ReLU(),
+            
+        #     nn.Conv2d(32, 64, kernel_size=3, padding=1), # 64 x 16 x 16
+        #     nn.MaxPool2d(2, 2), # 64 x 8 x 8
+        #     nn.ReLU(),
+            
+        #     nn.Conv2d(64, 128, kernel_size=3, padding=1), # 128 x 8 x 8
+        #     nn.MaxPool2d(2, 2), # 128 x 4 x 4
+        #     nn.ReLU(),
+        # )
+        
+        # 3 4 layer conv
         self.backbone = nn.Sequential(
-            nn.Conv2d(3, 32, kernel_size=3, padding=1), # 32 x 32 x 32
+            nn.Conv2d(num_inputs, 32, kernel_size=3, padding=1), # 32 x 32 x 32
+            nn.BatchNorm2d(32),
             nn.MaxPool2d(2, 2), # 32 x 16 x 16
             nn.ReLU(),
             
             nn.Conv2d(32, 64, kernel_size=3, padding=1), # 64 x 16 x 16
+            nn.BatchNorm2d(64),
             nn.MaxPool2d(2, 2), # 64 x 8 x 8
             nn.ReLU(),
             
             nn.Conv2d(64, 128, kernel_size=3, padding=1), # 128 x 8 x 8
+            nn.BatchNorm2d(128),
             nn.MaxPool2d(2, 2), # 128 x 4 x 4
+            nn.ReLU(),
+            
+            nn.Conv2d(128, 256, kernel_size=3, padding=1), # 256 x 4 x 4
+            nn.BatchNorm2d(256),
+            nn.MaxPool2d(2, 2), # 256 x 2 x 2
             nn.ReLU(),
         )
         
         self.flatten = nn.Flatten()
         
+        # 1
         # self.head = nn.Sequential(
         #     nn.Linear(32 * 8 * 8, 64), # 2048 x 64
         #     nn.ReLU(),
@@ -55,14 +80,26 @@ class CIFAKE_CNN(pl.LightningModule):
         #     nn.Sigmoid()
         # )
         
+        # 2
+        # self.head = nn.Sequential(
+        #     nn.Linear(128 * 4 * 4, 1024), # 2048 x 1024
+        #     nn.ReLU(),
+            
+        #     nn.Linear(1024, 256), # 1024 x 256
+        #     nn.ReLU(),
+            
+        #     nn.Linear(256, 1), # 256 x 1
+        #     nn.Sigmoid()
+        # )
+        
         self.head = nn.Sequential(
-            nn.Linear(128 * 4 * 4, 1024), # 2048 x 1024
+            nn.Linear(256 * 2 * 2, 512), # 2048 x 1024
             nn.ReLU(),
             
-            nn.Linear(1024, 256), # 1024 x 256
+            nn.Linear(512, 128), # 1024 x 128
             nn.ReLU(),
             
-            nn.Linear(256, 1), # 256 x 1
+            nn.Linear(128, num_outputs), # 128 x 1
             nn.Sigmoid()
         )
         
@@ -71,11 +108,16 @@ class CIFAKE_CNN(pl.LightningModule):
         # self.accuracy = torchmetrics.Accuracy(task='binary', num_classes=2)
         self.f1_score = torchmetrics.F1Score(task='binary', num_classes=2)
         
+        self.epochs = epochs
+        self.batch_size = batch_size
+        self.valid_size = valid_size
         self.lr = lr
         self.weight_decay = weight_decay
         
         self.train_loss = 0.0
         self.valid_loss = 0.0
+        
+        self.save_hyperparameters()
     
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         x = self.backbone(x)
