@@ -6,7 +6,6 @@ import torch
 from torch.utils.tensorboard import SummaryWriter
 
 import config
-from data.dataloader import Data_DataLoader
 from data.cifake_data_module import CIFAKEDataModule
 from models.cnn import CIFAKE_CNN
 

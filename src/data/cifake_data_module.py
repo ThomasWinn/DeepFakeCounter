@@ -5,7 +5,6 @@ from lightning.pytorch.utilities.types import EVAL_DATALOADERS, TRAIN_DATALOADER
 import torch
 from torch.utils.data import DataLoader, SubsetRandomSampler
 from torchvision import transforms
-import torchvision.datasets as datasets
 from torchvision.datasets import ImageFolder
 
 
@@ -13,6 +12,11 @@ from .helper import compute_mean_and_std
 
 
 class CIFAKEDataModule(pl.LightningDataModule):
+    """_summary_
+
+    Args:
+        pl (_type_): _description_
+    """
     def __init__(self, cache_file, data_dir, batch_size, num_workers, valid_size):
         super().__init__()
         self.cache_file = cache_file
@@ -22,21 +26,23 @@ class CIFAKEDataModule(pl.LightningDataModule):
         self.valid_size = valid_size
 
     def prepare_data(self):
-        # download, split, etc...
+        """_summary_
+        """
         self.mean, self.std = compute_mean_and_std(self.cache_file)
 
     def setup(self, stage: str) -> None:
+        """_summary_
+        Data has already been normalized between [0-1]
+        Also found that transformations made accuracy worse
+        
+        Args:
+            stage (str): _description_
+        """
         self.train_data = ImageFolder(
             "../dataset/train",
             transform=transforms.Compose(
                 [
-                    # transforms.Resize((32, 32)),
-                    # transforms.RandomAffine(scale=(0.9, 1.1), translate=(0.1, 0.1), degrees=10),
-                    # transforms.ColorJitter(brightness=(0.5,1.5),contrast=(1),saturation=(0.5,1.5),hue=(-0.1,0.1)),
-                    # transforms.RandomHorizontalFlip(p=0.5),
-                    # transforms.RandomRotation(90),
                     transforms.ToTensor(),
-                    # transforms.Normalize(self.mean, self.std)
                 ]
             ),
         )
@@ -44,16 +50,10 @@ class CIFAKEDataModule(pl.LightningDataModule):
             "../dataset/train",
             transform=transforms.Compose(
                 [
-                    # transforms.Resize((32, 32)),
                     transforms.ToTensor(),
-                    # transforms.Normalize(self.mean, self.std)
                 ]
             ),
         )
-
-        # Experiment with SubsetRandomSampler() and random_split
-        # SubsetRandomSampler - split on the indicie and assign randomly from that distribution
-        # random_split - no control over split whole dataset is divided randomly
 
         # randomize indices, split dataset at 80:20, sample elements within randomized indices at random
         total_img = len(self.train_data)
@@ -69,14 +69,17 @@ class CIFAKEDataModule(pl.LightningDataModule):
             "../dataset/test",
             transform=transforms.Compose(
                 [
-                    # transforms.Resize((32, 32)),
                     transforms.ToTensor(),
-                    # transforms.Normalize(self.mean, self.std)
                 ]
             ),
         )
 
     def train_dataloader(self) -> TRAIN_DATALOADERS:
+        """_summary_
+
+        Returns:
+            TRAIN_DATALOADERS: _description_
+        """
         return DataLoader(
             self.train_data,
             batch_size=self.batch_size,
@@ -85,6 +88,11 @@ class CIFAKEDataModule(pl.LightningDataModule):
         )
 
     def val_dataloader(self) -> EVAL_DATALOADERS:
+        """_summary_
+
+        Returns:
+            EVAL_DATALOADERS: _description_
+        """
         return DataLoader(
             self.valid_data,
             batch_size=self.batch_size,
@@ -94,12 +102,14 @@ class CIFAKEDataModule(pl.LightningDataModule):
         )
 
     def test_dataloader(self) -> EVAL_DATALOADERS:
+        """_summary_
+
+        Returns:
+            EVAL_DATALOADERS: _description_
+        """
         return DataLoader(
             self.test_data,
             batch_size=self.batch_size,
             num_workers=self.num_workers,
             shuffle=False,
         )
-
-    def predict_dataloader(self) -> EVAL_DATALOADERS:
-        return super().predict_dataloader()

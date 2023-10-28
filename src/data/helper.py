@@ -8,8 +8,13 @@ from tqdm import tqdm
 
 
 def compute_mean_and_std(file_path):
-    """
-    Compute per-channel mean and std of the dataset (to be used in transforms.Normalize())
+    """Compute per-channel mean and std of the dataset (to be used in transforms.Normalize())
+
+    Args:
+        file_path (_type_): _description_
+
+    Returns:
+        _type_: _description_
     """
     cache_file = file_path
     if os.path.exists(cache_file):

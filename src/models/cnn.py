@@ -22,6 +22,17 @@ class CIFAKE_CNN(pl.LightningModule):
     def __init__(
         self, epochs, batch_size, valid_size, num_inputs, num_outputs, lr, weight_decay
     ) -> None:
+        """_summary_
+
+        Args:
+            epochs (_type_): _description_
+            batch_size (_type_): _description_
+            valid_size (_type_): _description_
+            num_inputs (_type_): _description_
+            num_outputs (_type_): _description_
+            lr (_type_): _description_
+            weight_decay (_type_): _description_
+        """
         super().__init__()
 
         # 1 2_conv_2_linear_paper
@@ -160,12 +171,29 @@ class CIFAKE_CNN(pl.LightningModule):
         self.save_hyperparameters()
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
+        """_summary_
+
+        Args:
+            x (torch.Tensor): _description_
+
+        Returns:
+            torch.Tensor: _description_
+        """
         x = self.backbone(x)
         x = self.flatten(x)
         x = self.head(x)
         return x
 
     def training_step(self, batch, batch_idx):
+        """_summary_
+
+        Args:
+            batch (_type_): _description_
+            batch_idx (_type_): _description_
+
+        Returns:
+            _type_: _description_
+        """
         x, y = batch
         loss, y_hat, y = self._common_step(batch, batch_idx)
         # accuracy = self.my_accuracy(y_hat, y)
@@ -184,6 +212,11 @@ class CIFAKE_CNN(pl.LightningModule):
         return {"loss": loss, "y_hat": y_hat, "y": y}
 
     def training_epoch_end(self, outputs: EPOCH_OUTPUT) -> None:
+        """_summary_
+
+        Args:
+            outputs (EPOCH_OUTPUT): _description_
+        """
         y_hats = torch.cat([x["y_hat"] for x in outputs])
         ys = torch.cat([x["y"] for x in outputs])
         self.log_dict(
@@ -201,6 +234,15 @@ class CIFAKE_CNN(pl.LightningModule):
         self.train_loss = 0.0
 
     def validation_step(self, batch, batch_idx):
+        """_summary_
+
+        Args:
+            batch (_type_): _description_
+            batch_idx (_type_): _description_
+
+        Returns:
+            _type_: _description_
+        """
         loss, y_hat, y = self._common_step(batch, batch_idx)
         self.log("valid_loss", loss)
 
@@ -209,17 +251,36 @@ class CIFAKE_CNN(pl.LightningModule):
         return loss
 
     def validation_epoch_end(self, outputs: EPOCH_OUTPUT) -> None:
+        """_summary_
+
+        Args:
+            outputs (EPOCH_OUTPUT): _description_
+        """
         self.logger.experiment.add_scalars(
             "Train vs Valid", {"valid_loss": self.valid_loss}, self.global_step
         )
         self.valid_loss = 0.0
 
     def test_step(self, batch, batch_idx):
+        """_summary_
+
+        Args:
+            batch (_type_): _description_
+            batch_idx (_type_): _description_
+
+        Returns:
+            _type_: _description_
+        """
         loss, y_hat, y = self._common_step(batch, batch_idx)
         self.log("test_loss", loss)
         return {"loss": loss, "y_hat": y_hat, "y": y}
 
     def test_epoch_end(self, outputs: EPOCH_OUTPUT) -> None:
+        """_summary_
+
+        Args:
+            outputs (EPOCH_OUTPUT): _description_
+        """
         y_hats = torch.cat([x["y_hat"] for x in outputs])
         ys = torch.cat([x["y"] for x in outputs])
         self.log_dict(
@@ -233,6 +294,15 @@ class CIFAKE_CNN(pl.LightningModule):
         )
 
     def predict_step(self, batch, batch_idx):
+        """_summary_
+
+        Args:
+            batch (_type_): _description_
+            batch_idx (_type_): _description_
+
+        Returns:
+            _type_: _description_
+        """
         # x, y = batch
         # x = x.reshape(x.size(0), -1)
         # y_hat = self.forward(x)
@@ -245,6 +315,15 @@ class CIFAKE_CNN(pl.LightningModule):
         # return float(accuracy)
 
     def _common_step(self, batch, batch_idx):
+        """_summary_
+
+        Args:
+            batch (_type_): _description_
+            batch_idx (_type_): _description_
+
+        Returns:
+            _type_: _description_
+        """
         # x, y = batch
         # x = x.reshape(x.size(0), -1)
         # y_hat = self.forward(x)
@@ -256,6 +335,11 @@ class CIFAKE_CNN(pl.LightningModule):
         return loss, y_hat, y
 
     def configure_optimizers(self):
+        """_summary_
+
+        Returns:
+            _type_: _description_
+        """
         optimizer1 = torch.optim.Adam(
             self.parameters(), lr=self.lr, weight_decay=self.weight_decay
         )
