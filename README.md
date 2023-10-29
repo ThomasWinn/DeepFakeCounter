@@ -32,7 +32,20 @@ python main.py
 ```
 
 ## Architectures
-TODO:
+The winning architecture of the 4 I implemented, is as follows...
+- Tail
+  - 4 convolutions where after each convolution, we do the following
+    - BatchNorm
+    - MaxPool
+    - RELU Activation
+- Flatten
+- Head
+  - 2 Linear Layers
+    - RELU Activation
+  - Output Linear Layer
+    - Sigmoid
+   
+You can find all the implementations in the src/models/cnn.py file. The model not commented is the 4_conv_batch_3_linear architecture.
 
 ## Results
 | Architectures / Eval  | Training | Test  |
@@ -43,11 +56,14 @@ TODO:
 | 5_conv_batch_3_linear | 0.979    | 0.945 |
 
 ### Result Analysis
-TODO:
+I was perfectly able to replicate the CIFAKE paper's test accuracy results. While their proposal was good, I thought to use more convolutions and batch normalization. The reason is simply because when it comes to detecting fake pictures from the real ones, I thought that we needed to pay closer attention to finer details. When you're trying to figure out if this picture of a human has been deep faked, you can tell easily by the hair. Sometimes in fake images, the hair may be dull in texture - this is a dead giveaway. The same can be said about hands along with the background of the subject. Identifying these small pattern differences is what I believe is the "end all be all" for detecting fake images.
+
+Digging for too small of detail may also hinder the performance hence why greater than 4 convolutions started to hinder performance for the model. Finding that sweet spot of 4 convolutions seems to be what works best for identifying fakes.
 
 ## Future Works
-- Expand work to classifying fake human photos. Currently the model fails to correctly classify fake human pictures.
-TODO:
+- Expand work to classify fake human photos. Currently, the model fails to classify fake human pictures correctly.
+- Implement a Stable Diffusion model, so I can have more fake image data
+- Begin working on deep fake human photos instead of using the CIFAKE dataset.
 
 ## References
 - [CIFAKE: Image Classification and Explainable Identification of AI-Generated Synthetic Images](https://arxiv.org/abs/2303.14126)
